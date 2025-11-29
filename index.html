@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আমার স্মার্ট অটো-রুটিন</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #4e54c8;
+            --secondary: #8f94fb;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+            --active-glow: #ff4757;
+            --sleep-glow: #6c5ce7; /* New Color for Sleep */
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --glass: rgba(255, 255, 255, 0.95);
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background: linear-gradient(to right, #8f94fb, #4e54c8);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--dark);
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--glass);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 100;
+            padding-top: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0 0 10px 0;
+        }
+
+        .date-badge {
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            display: inline-block;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            flex-wrap: wrap;
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .input-area.editing-mode {
+            border-color: var(--warning);
+            background: #fff9e6;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input[type="time"] { flex: 1; }
+        input[type="text"] { flex: 3; min-width: 200px; }
+
+        button.add-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button.add-btn.update-btn {
+            background: var(--warning);
+            color: #333;
+        }
+
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+            padding-bottom: 60px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #e0e0e0;
+        }
+
+        .task-item {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .time-marker {
+            min-width: 110px;
+            padding-right: 20px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.4rem;
+            padding-top: 5px;
+            line-height: 1.2;
+        }
+
+        .time-marker span {
+            display: block;
+            font-size: 1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
+        .task-card {
+            flex: 1;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            flex-wrap: wrap; 
+            transition: all 0.3s ease;
+        }
+
+        .indicator {
+            position: absolute;
+            left: 13px;
+            top: 25px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        /* ACTIVE TASK STYLES (Standard) */
+        .task-item.active-now {
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        .task-item.active-now .task-card {
+            border-left-color: var(--active-glow);
+            background: #fff0f0;
+            box-shadow: 0 0 25px rgba(255, 71, 87, 0.4);
+            animation: borderPulse 2s infinite;
+        }
+
+        .task-item.active-now .time-marker {
+            color: var(--active-glow);
+            font-size: 1.6rem;
+            transform: scale(1.1);
+        }
+
+        .task-item.active-now .indicator {
+            background: var(--active-glow);
+            border-color: var(--active-glow);
+            box-shadow: 0 0 0 rgba(255, 71, 87, 0.4);
+            animation: pulse-ring 2s infinite;
+        }
+
+        .task-item.active-now .status-badge {
+            display: inline-block;
+        }
+
+        /* SLEEP MODE STYLES (Calm Blue/Purple) */
+        .task-item.active-now.sleep-mode .task-card {
+            border-left-color: var(--sleep-glow);
+            background: #f3f0ff;
+            box-shadow: 0 0 25px rgba(108, 92, 231, 0.4);
+            animation: borderPulseSleep 3s infinite;
+        }
+
+        .task-item.active-now.sleep-mode .time-marker {
+            color: var(--sleep-glow);
+        }
+
+        .task-item.active-now.sleep-mode .indicator {
+            background: var(--sleep-glow);
+            border-color: var(--sleep-glow);
+            box-shadow: 0 0 0 rgba(108, 92, 231, 0.4);
+            animation: pulse-ring-sleep 3s infinite;
+        }
+        
+        .task-item.active-now.sleep-mode .status-badge {
+            background: var(--sleep-glow);
+        }
+        
+        .task-item.active-now.sleep-mode .live-clock-widget {
+            background: linear-gradient(135deg, var(--sleep-glow), #a29bfe);
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        @keyframes borderPulseSleep {
+            0% { border-left-color: var(--sleep-glow); }
+            50% { border-left-color: #a29bfe; }
+            100% { border-left-color: var(--sleep-glow); }
+        }
+        
+        @keyframes pulse-ring-sleep {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(108, 92, 231, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); }
+        }
+
+        /* --- DYNAMIC LIVE CLOCK STYLES --- */
+        .live-clock-widget {
+            margin-top: 15px;
+            background: linear-gradient(135deg, var(--active-glow), #ff6b81);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            animation: slideInFade 0.5s ease-out;
+            min-width: 180px;
+            border: 2px solid white;
+            transition: background 0.5s ease;
+        }
+
+        .clock-time {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            line-height: 1.2;
+        }
+
+        .clock-seconds {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .clock-date {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            font-weight: 500;
+            margin-top: 2px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            padding-top: 4px;
+        }
+
+        .clock-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+
+        @keyframes slideInFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        }
+
+        @keyframes borderPulse {
+            0% { border-left-color: var(--active-glow); }
+            50% { border-left-color: #ff6b81; }
+            100% { border-left-color: var(--active-glow); }
+        }
+
+        .status-badge {
+            display: none;
+            background: var(--active-glow);
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0.7; } }
+
+        .task-content { flex: 1; min-width: 200px; } 
+
+        .task-title {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #34495e;
+        }
+        
+        .task-desc {
+            margin: 8px 0 0 0;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .task-item.completed .indicator {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .task-item.completed .task-card {
+            border-left-color: var(--success);
+            background: #f0fff4;
+            opacity: 0.6;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+            background-color: #f1f2f6;
+        }
+
+        .check-btn { color: #95a5a6; }
+        .check-btn:hover { color: var(--success); }
+        .task-item.completed .check-btn { color: var(--success); }
+
+        .edit-btn { color: var(--warning); }
+        .edit-btn:hover { color: #f39c12; }
+
+        .delete-btn { color: var(--danger); }
+        .delete-btn:hover { color: #c0392b; }
+        
+        /* Floating Action Button */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        
+        .fab-btn {
+            background: var(--active-glow);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .fab-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(255, 71, 87, 0.5);
+        }
+        
+        .fab-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .tooltip {
+            position: absolute;
+            right: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .fab-container:hover .tooltip {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .time-marker { min-width: 80px; font-size: 1.1rem; }
+            .task-title { font-size: 1.1rem; }
+            .task-item.active-now .time-marker { font-size: 1.3rem; }
+            .actions { flex-direction: column; }
+            .fab-container { bottom: 20px; right: 20px; }
+            .task-card { flex-direction: column; align-items: flex-start; }
+            .live-clock-widget { width: 100%; margin-top: 10px; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>স্মার্ট ডেইলি শিডিউল</h1>
+        <!-- Header date removed as requested, since dynamic clock shows it -->
+        <div style="font-size: 0.9rem; margin-top: 5px; color: #666;">বর্তমান কাজ অটোমেটিক ফোকাস হবে</div>
+    </header>
+
+    <!-- Input area -->
+    <div class="input-area" id="inputSection">
+        <input type="time" id="newTime">
+        <input type="text" id="newTask" placeholder="নতুন কাজ লিখুন...">
+        <button class="add-btn" id="actionBtn" onclick="handleTaskAction()">যোগ করুন</button>
+        <button class="add-btn" id="cancelBtn" onclick="cancelEdit()" style="background: #95a5a6; display: none;">বাতিল</button>
+    </div>
+
+    <div class="timeline" id="taskList">
+        <!-- JS will load tasks here -->
+    </div>
+    
+    <div class="reset-link">
+        <a onclick="resetToDefault()">রুটিন রিসেট করুন</a>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab-container">
+    <div class="tooltip">বর্তমান কাজে ফিরে যান</div>
+    <button class="fab-btn" onclick="jumpToCurrentTask()" title="বর্তমান কাজে ফোকাস করুন">
+        🎯
+    </button>
+</div>
+
+<!-- Hidden Template for Clock (Will be moved via JS) -->
+<div id="clockTemplate" style="display:none;">
+    <div class="live-clock-widget" id="liveClock">
+        <div class="clock-label">বর্তমান সময়</div>
+        <div class="clock-time" id="clockTime">--:--:--</div>
+        <div class="clock-date" id="clockDate">-- --, ----</div>
+    </div>
+</div>
+
+<script>
+    const DB_KEY = 'my_auto_routine_v2'; 
+    let editingTaskId = null; 
+
+    // Default Routine Data
+    const defaultRoutine = [
+        { id: 1, time: '04:01', task: 'Waking up refreshed, getting ready', end: '04:30', done: false },
+        { id: 2, time: '04:31', task: 'Walking or daily exercise', end: '05:00', done: false },
+        { id: 3, time: '05:01', task: 'Get ready for work, check tasks', end: '05:10', done: false },
+        { id: 4, time: '05:11', task: 'TubeerGallery project work', end: '05:50', done: false },
+        { id: 5, time: '05:51', task: 'Body/Health break', end: '05:55', done: false },
+        { id: 6, time: '05:56', task: 'TubeerGallery project work', end: '06:35', done: false },
+        { id: 7, time: '06:36', task: 'Body/Health break', end: '06:40', done: false },
+        { id: 8, time: '06:41', task: 'TubeerGallery project work', end: '07:20', done: false },
+        { id: 9, time: '07:21', task: 'Body/Health break', end: '07:25', done: false },
+        { id: 10, time: '07:26', task: 'Tubeer AuraSyncra project work', end: '08:05', done: false },
+        { id: 11, time: '08:06', task: 'Body/Health break', end: '08:10', done: false },
+        { id: 12, time: '08:11', task: 'Tubeer AuraSyncra project work', end: '08:50', done: false },
+        { id: 13, time: '08:51', task: 'Body/Health break', end: '08:55', done: false },
+        { id: 14, time: '08:56', task: 'Tubeer AuraSyncra project work', end: '09:35', done: false },
+        { id: 15, time: '09:36', task: 'Body/Health break', end: '09:40', done: false },
+        { id: 16, time: '09:41', task: 'Getting ready to eat & go to store', end: '10:00', done: false },
+        { id: 17, time: '10:01', task: 'Store Work & Transaction Records', end: '13:00', done: false },
+        { id: 18, time: '13:01', task: 'Tidying store, going home', end: '13:05', done: false },
+        { id: 19, time: '13:06', task: 'Organize clothes/belongings', end: '13:30', done: false },
+        { id: 20, time: '13:31', task: 'Clean up, Eat, Ready for work', end: '14:00', done: false },
+        { id: 21, time: '14:01', task: 'Body/Health break', end: '14:05', done: false },
+        { id: 22, time: '14:06', task: 'NokshaLab project work', end: '14:35', done: false },
+        { id: 23, time: '14:36', task: 'Body/Health break', end: '14:40', done: false },
+        { id: 24, time: '14:41', task: 'NokshaLab project work', end: '15:20', done: false },
+        { id: 25, time: '15:21', task: 'Body/Health break', end: '15:25', done: false },
+        { id: 26, time: '15:26', task: 'NokshaLab project work', end: '16:05', done: false },
+        { id: 27, time: '16:06', task: 'Body/Health break', end: '16:10', done: false },
+        { id: 28, time: '16:11', task: 'Walking or daily exercise', end: '16:40', done: false },
+        { id: 29, time: '16:41', task: 'LanguageBari project work', end: '17:00', done: false },
+        { id: 30, time: '17:01', task: 'Tubeer AuraSyncra project work', end: '17:40', done: false },
+        { id: 31, time: '17:41', task: 'Ready & go to store', end: '18:00', done: false },
+        { id: 32, time: '18:01', task: 'Store Work & Records', end: '21:00', done: false },
+        { id: 33, time: '21:01', task: 'Tidying store, going home', end: '21:05', done: false },
+        { id: 34, time: '21:06', task: 'Clean up, Eat, Ready for work', end: '21:35', done: false },
+        { id: 35, time: '21:36', task: 'TubeerGallery project work', end: '21:40', done: false },
+        { id: 36, time: '21:41', task: 'Body/Health break', end: '21:45', done: false },
+        { id: 37, time: '21:46', task: '03Coding project work', end: '23:00', done: false },
+        { id: 38, time: '23:01', task: 'Sleep', end: '04:00', done: false }
+    ];
+
+    const safeStorage = {
+        getItem: function(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        },
+        setItem: function(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) { }
+        }
+    };
+
+    // --- Clock Logic ---
+    let liveClockEl = null;
+
+    function initClock() {
+        // Create the clock element if not exists (it exists in HTML template, we select it)
+        liveClockEl = document.getElementById('liveClock');
+        // Update it every second
+        setInterval(updateClockTime, 1000);
+        updateClockTime();
+    }
+
+    function updateClockTime() {
+        const now = new Date();
+        
+        // Format Time
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        
+        const hStr = toBanglaDigit(hours < 10 ? '0' + hours : hours);
+        const mStr = toBanglaDigit(minutes < 10 ? '0' + minutes : minutes);
+        const sStr = toBanglaDigit(seconds < 10 ? '0' + seconds : seconds);
+        
+        document.getElementById('clockTime').innerHTML = `${hStr}:${mStr}<span class="clock-seconds">:${sStr}</span> ${ampm}`;
+        
+        // Format Date
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('clockDate').innerText = now.toLocaleDateString('bn-BD', options);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initClock();
+        loadTasks();
+        startAutoFocusSystem();
+    });
+
+    function toBanglaDigit(str) {
+        if(!str) return '';
+        const banglaDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+        return str.toString().replace(/[0-9]/g, (w) => banglaDigits[w]);
+    }
+
+    function formatTime(time24) {
+        if(!time24) return '';
+        const [hours, minutes] = time24.split(':');
+        let h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        const hStr = h < 10 ? '0' + h : h;
+        return `${toBanglaDigit(hStr)}:${toBanglaDigit(minutes)} ${ampm}`;
+    }
+
+    function getTasks() {
+        const stored = safeStorage.getItem(DB_KEY);
+        if (!stored) {
+            safeStorage.setItem(DB_KEY, JSON.stringify(defaultRoutine));
+            return defaultRoutine;
+        }
+        try { return JSON.parse(stored); } catch(e) { return defaultRoutine; }
+    }
+
+    function saveTasks(tasks) {
+        safeStorage.setItem(DB_KEY, JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+        const tasks = getTasks();
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+
+        tasks.forEach(task => {
+            const div = document.createElement('div');
+            div.setAttribute('data-start', task.time);
+            div.setAttribute('data-end', task.end);
+            div.setAttribute('id', `task-${task.id}`);
+            div.className = `task-item ${task.done ? 'completed' : ''}`;
+            
+            let timeDisplay = formatTime(task.time);
+            let durationDisplay = task.end ? `পর্যন্ত: ${formatTime(task.end)}` : '';
+
+            div.innerHTML = `
+                <div class="indicator"></div>
+                <div class="time-marker">
+                    ${timeDisplay}
+                    <span>${durationDisplay}</span>
+                </div>
+                <div class="task-card">
+                    <div class="task-content">
+                        <div class="status-badge">চলমান কাজ</div>
+                        <h3 class="task-title">${task.task}</h3>
+                        ${task.end ? `<p class="task-desc">সময়সীমা: ${toBanglaDigit(task.time)} - ${toBanglaDigit(task.end)}</p>` : ''}
+                        <div class="clock-mount-point"></div> <!-- Clock will sit here -->
+                    </div>
+                    <div class="actions">
+                        <!-- Toggle Complete -->
+                        <button class="icon-btn check-btn" onclick="toggleTask(${task.id})" title="সম্পন্ন/অসম্পন্ন">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                        <!-- Edit -->
+                        <button class="icon-btn edit-btn" onclick="editTask(${task.id})" title="এডিট করুন">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <!-- Delete -->
+                        <button class="icon-btn delete-btn" onclick="deleteTask(${task.id})" title="মুছে ফেলুন">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+        checkAndHighlightCurrentTask();
+    }
+
+    // --- AUTO FOCUS & CLOCK MOVEMENT LOGIC ---
+    let autoScrollTimeout = null;
+
+    function startAutoFocusSystem() {
+        setInterval(checkAndHighlightCurrentTask, 10000); // Check every 10s
+        checkAndHighlightCurrentTask();
+    }
+
+    function checkAndHighlightCurrentTask() {
+        // Don't auto-move during edit
+        if (editingTaskId !== null) return;
+
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        
+        const taskElements = document.querySelectorAll('.task-item');
+        let activeFound = false;
+        
+        taskElements.forEach(el => {
+            const startStr = el.getAttribute('data-start');
+            const endStr = el.getAttribute('data-end');
+            
+            if (!startStr || !endStr) return;
+
+            const [sH, sM] = startStr.split(':').map(Number);
+            const [eH, eM] = endStr.split(':').map(Number);
+            
+            const startMinutes = sH * 60 + sM;
+            const endMinutes = eH * 60 + eM;
+
+            let isActive = false;
+            if (startMinutes > endMinutes) {
+                // Crossing midnight
+                if (currentMinutes >= startMinutes || currentMinutes < endMinutes) isActive = true;
+            } else {
+                if (currentMinutes >= startMinutes && currentMinutes < endMinutes) isActive = true;
+            }
+
+            if (isActive) {
+                activeFound = true;
+                if (!el.classList.contains('active-now')) {
+                    // Clean previous
+                    document.querySelectorAll('.active-now').forEach(active => {
+                        active.classList.remove('active-now', 'sleep-mode'); // Clean sleep mode too
+                        active.querySelector('.status-badge').innerText = 'চলমান কাজ'; // Reset text
+                    });
+                    
+                    // Activate new
+                    el.classList.add('active-now');
+                    
+                    // CHECK FOR SLEEP (Case insensitive check for "Sleep" or "ঘুম")
+                    const taskTitle = el.querySelector('.task-title').innerText.toLowerCase();
+                    const badge = el.querySelector('.status-badge');
+                    
+                    if(taskTitle.includes('sleep') || taskTitle.includes('ঘুম')) {
+                        el.classList.add('sleep-mode');
+                        badge.innerText = 'এখন বিশ্রামের সময় 😴';
+                    } else {
+                        badge.innerText = 'চলমান কাজ';
+                    }
+                    
+                    scrollToActive(el);
+                }
+                
+                // Move the Clock Here
+                moveClockToTask(el);
+            } else {
+                el.classList.remove('active-now', 'sleep-mode');
+            }
+        });
+        
+        // If no task is active (idle time), we might want to hide the clock or show it globally
+        // For now, if no active task, clock stays where it was or we can hide it.
+    }
+    
+    function moveClockToTask(taskElement) {
+        if (!liveClockEl) return;
+        
+        const mountPoint = taskElement.querySelector('.clock-mount-point');
+        if (mountPoint && !mountPoint.contains(liveClockEl)) {
+            // Append moves the element if it exists elsewhere in DOM
+            mountPoint.appendChild(liveClockEl);
+        }
+    }
+
+    function scrollToActive(element) {
+        if (autoScrollTimeout) clearTimeout(autoScrollTimeout);
+        autoScrollTimeout = setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
+    
+    function jumpToCurrentTask() {
+        checkAndHighlightCurrentTask(); 
+        const activeElement = document.querySelector('.active-now');
+        if (activeElement) {
+            activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            alert('এই মুহূর্তে কোনো কাজ শিডিউল করা নেই!');
+        }
+    }
+
+    // --- ACTION FUNCTIONS ---
+
+    function handleTaskAction() {
+        const timeInput = document.getElementById('newTime');
+        const taskInput = document.getElementById('newTask');
+        
+        if (!timeInput.value || !taskInput.value.trim()) {
+            alert('দয়া করে সময় এবং কাজের নাম লিখুন');
+            return;
+        }
+
+        const tasks = getTasks();
+
+        if (editingTaskId) {
+            const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+            if (taskIndex > -1) {
+                tasks[taskIndex].time = timeInput.value;
+                tasks[taskIndex].task = taskInput.value.trim();
+            }
+            cancelEdit();
+        } else {
+            tasks.push({
+                id: Date.now(),
+                time: timeInput.value,
+                task: taskInput.value.trim(),
+                end: '', 
+                done: false
+            });
+        }
+
+        tasks.sort((a, b) => a.time.localeCompare(b.time));
+        saveTasks(tasks);
+        loadTasks(); // This re-renders list, clock will be detached
+        checkAndHighlightCurrentTask(); // This re-attaches clock
+        
+        if (!editingTaskId) {
+            timeInput.value = '';
+            taskInput.value = '';
+        }
+    }
+
+    function editTask(id) {
+        const tasks = getTasks();
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        document.getElementById('newTime').value = task.time;
+        document.getElementById('newTask').value = task.task;
+        
+        editingTaskId = id;
+        const actionBtn = document.getElementById('actionBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const inputSection = document.getElementById('inputSection');
+
+        actionBtn.innerText = 'আপডেট করুন';
+        actionBtn.classList.add('update-btn');
+        cancelBtn.style.display = 'block';
+        inputSection.classList.add('editing-mode');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        editingTaskId = null;
+        document.getElementById('newTime').value = '';
+        document.getElementById('newTask').value = '';
+        
+        const actionBtn = document.getElementById('actionBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const inputSection = document.getElementById('inputSection');
+
+        actionBtn.innerText = 'যোগ করুন';
+        actionBtn.classList.remove('update-btn');
+        cancelBtn.style.display = 'none';
+        inputSection.classList.remove('editing-mode');
+    }
+
+    function deleteTask(id) {
+        if(confirm('আপনি কি নিশ্চিত যে এই কাজটি মুছে ফেলতে চান?')) {
+            if (editingTaskId === id) cancelEdit();
+
+            const tasks = getTasks().filter(t => t.id !== id);
+            saveTasks(tasks);
+            loadTasks();
+        }
+    }
+
+    function toggleTask(id) {
+        const tasks = getTasks();
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            task.done = !task.done;
+            saveTasks(tasks);
+            loadTasks();
+        }
+    }
+
+    function resetToDefault() {
+        if(confirm('সতর্কতা: এটি আপনার সব পরিবর্তন মুছে ডিফল্ট রুটিন ফিরিয়ে আনবে। আপনি কি নিশ্চিত?')) {
+            safeStorage.setItem(DB_KEY, JSON.stringify(defaultRoutine));
+            cancelEdit();
+            loadTasks();
+        }
+    }
+</script>
+
+</body>
+</html>
